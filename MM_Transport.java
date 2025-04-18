@@ -16,12 +16,14 @@ public class MM_Transport {
     private TouchSensor slideBottomLimit = null;
 
     //slide constants
-    public final int MAX_SLIDE_TICKS = 3000;
+    private final int MAX_SLIDE_TICKS = 3000;
     private final int SLIDE_TICK_INCREMENT = 230;
     private final double PULLEY_DIAMETER = 1.503937;
     private final double PULLEY_CIRCUMFERENCE = Math.PI * PULLEY_DIAMETER;
     private final double SLIDE_TICKS_PER_REV = 537.7;
-    private final double TICKS_PER_INCH = (SLIDE_TICKS_PER_REV / PULLEY_CIRCUMFERENCE);
+    private final double SLIDE_TICKS_PER_INCH = (SLIDE_TICKS_PER_REV / PULLEY_CIRCUMFERENCE);
+    private final int MAX_EXTENSION_AT_HORIZONTAL = 17 * (int) SLIDE_TICKS_PER_INCH;
+
 
     //pivot constants
     private final int PIVOT_TICK_INCREMENT = 150;
@@ -34,6 +36,9 @@ public class MM_Transport {
     private final int MAX_PIVOT_TICKS = pivotDegreesToTicks(MAX_PIVOT_ANGLE); //3819
 
     private boolean pivotBottomLimitIsHandled = false;
+    private boolean slideBottomLimitIsHandled = false;
+    
+    private boolean slideHoldingMinimum = false;
 
     public MM_Transport(MM_OpMode opMode) {
         this.opMode = opMode;
@@ -84,20 +89,50 @@ public class MM_Transport {
         pivot.setTargetPosition(pivotTargetTicks);
     }
 
+    public void runSlide() {
+        int slideTargetTicks = 10;
+
+        if((slideBottomLimit.isPressed() || slideHoldingMinimum) && opMode.gamepad2.right_trigger == 0){ //if bottom limit pressed and im not trying to go up
+            if(!slideHoldingMinimum) {
+                slide.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                slide.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+                slide.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                slide.setPower(1);
+                slideHoldingMinimum = true;
+            }
+        } else if(opMode.gamepad2.left_stick_y > .01 || opMode.gamepad2.left_stick_y < .01){
+            if(slideHoldingMinimum){
+                slideHoldingMinimum = false;
+            }
+
+            if (opMode.gamepad2.right_trigger > 0.1) {
+                slideTargetTicks = slide.getCurrentPosition() + (int)(opMode.gamepad2.right_trigger * SLIDE_TICK_INCREMENT);
+            } else {
+                slideTargetTicks = slide.getCurrentPosition() - (int)(opMode.gamepad2.left_trigger * SLIDE_TICK_INCREMENT);
+            }
+            slideTargetTicks = (int)clip(slideTargetTicks, 0, getSlideLimit());
+        }
+
+        slide.setTargetPosition(slideTargetTicks);
+    }
+
     public int getSlideTicks() {
         return slide.getCurrentPosition();
     }
 
+    private int getSlideLimit() {
+        return (int) Math.min(MAX_SLIDE_TICKS, (MAX_EXTENSION_AT_HORIZONTAL / Math.abs(Math.cos(Math.toRadians(getPivotAngle())))));
+    }
+
     public double getSlideInches() {
-        return slide.getCurrentPosition() / TICKS_PER_INCH;
+        return slide.getCurrentPosition() / SLIDE_TICKS_PER_INCH;
     }
 
     public int pivotDegreesToTicks(double degrees) {
         return (int) (TICKS_PER_PIVOT_DEGREE * (degrees - OFFSET_PIVOT_ANGLE));
     }
 
-    public double getPivotDegrees() {
+    public double getPivotAngle() {
         return (pivot.getCurrentPosition() / TICKS_PER_PIVOT_DEGREE) + OFFSET_PIVOT_ANGLE;
     }
-
 }

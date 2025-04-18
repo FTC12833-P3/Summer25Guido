@@ -38,7 +38,7 @@ public abstract class MM_OpMode extends LinearOpMode {
 
     public void telemetry(){
         multipleTelemetry.addData("slide", "inches: %.2f slide ticks: %d", robot.transport.getSlideInches(), robot.transport.getSlideTicks());
-        multipleTelemetry.addData("pivot", "degrees: %.2f", robot.transport.getPivotDegrees());
+        multipleTelemetry.addData("pivot", "degrees: %.2f", robot.transport.getPivotAngle());
         multipleTelemetry.update();
     }
 
