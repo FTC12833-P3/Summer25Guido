@@ -148,6 +148,10 @@ public class MM_Transport {
         return pivotTicksToDegrees(pivot.getCurrentPosition());
     }
 
+    public int getMaxPivotTicks(){
+        return MAX_PIVOT_TICKS;
+    }
+
     private double pivotTicksToDegrees(int pivotTicks) {
         return (pivotTicks / TICKS_PER_PIVOT_DEGREE) + OFFSET_PIVOT_ANGLE;
     }
@@ -155,4 +159,5 @@ public class MM_Transport {
     private int pivotDegreesToTicks(double degrees) {
         return (int) (TICKS_PER_PIVOT_DEGREE * (degrees - OFFSET_PIVOT_ANGLE));
     }
+
 }
