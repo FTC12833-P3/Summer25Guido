@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.util.Range.clip;
-
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
@@ -11,7 +9,6 @@ public class MM_Transport {
 
     private DcMotorEx pivot = null;
     private DcMotorEx slide = null;
-
     private TouchSensor pivotBottomLimit = null;
     private TouchSensor slideBottomLimit = null;
 
@@ -24,7 +21,6 @@ public class MM_Transport {
     private final double SLIDE_TICKS_PER_INCH = (SLIDE_TICKS_PER_REV / PULLEY_CIRCUMFERENCE);
     private final int MAX_EXTENSION_AT_HORIZONTAL = 17 * (int) SLIDE_TICKS_PER_INCH;
 
-
     //pivot constants
     private final int PIVOT_TICK_INCREMENT = 150;
     private final double PIVOT_TICKS_PER_REV = 1992.6;
@@ -36,9 +32,9 @@ public class MM_Transport {
     private final int MAX_PIVOT_TICKS = pivotDegreesToTicks(MAX_PIVOT_ANGLE); //3819
 
     private boolean pivotBottomLimitIsHandled = false;
-    private boolean slideBottomLimitIsHandled = false;
-    
     private boolean slideHoldingMinimum = false;
+    private boolean slideHoming = false;
+    private int slideTargetTicks;
 
     public MM_Transport(MM_OpMode opMode) {
         this.opMode = opMode;
@@ -65,10 +61,11 @@ public class MM_Transport {
         slide.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         slide.setTargetPosition(0);
         slide.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        slide.setPower(1);
     }
 
     public void runPivot(){
-        int pivotTargetTicks = 0;
+        int pivotTargetTicks = pivot.getTargetPosition();
 
         if(pivotBottomLimit.isPressed() && opMode.gamepad2.left_stick_y >= 0){ //if bottom limit pressed and im not trying to go up
             if(!pivotBottomLimitIsHandled) {
@@ -77,7 +74,7 @@ public class MM_Transport {
                 pivot.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
                 pivotBottomLimitIsHandled = true;
             }
-        } else if(opMode.gamepad2.left_stick_y > .01 || opMode.gamepad2.left_stick_y < .01){
+        } else if(opMode.gamepad2.left_stick_y > .01 || opMode.gamepad2.left_stick_y < -.01){
             if(pivotBottomLimitIsHandled){
                 pivotBottomLimitIsHandled = false;
                 pivot.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
@@ -85,54 +82,77 @@ public class MM_Transport {
             }
             pivotTargetTicks = (int)clip(pivot.getCurrentPosition() + -opMode.gamepad2.left_stick_y * PIVOT_TICK_INCREMENT, 0, MAX_PIVOT_TICKS);
         }
-
         pivot.setTargetPosition(pivotTargetTicks);
     }
 
     public void runSlide() {
-        int slideTargetTicks = 10;
-
         if((slideBottomLimit.isPressed() || slideHoldingMinimum) && opMode.gamepad2.right_trigger == 0){ //if bottom limit pressed and im not trying to go up
             if(!slideHoldingMinimum) {
+                slideTargetTicks = 10;
                 slide.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                 slide.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
                 slide.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                 slide.setPower(1);
                 slideHoldingMinimum = true;
+                slideHoming = false;
             }
-        } else if(opMode.gamepad2.left_stick_y > .01 || opMode.gamepad2.left_stick_y < .01){
+        } else if(opMode.gamepad2.right_trigger > .01 || opMode.gamepad2.left_trigger > .01){
             if(slideHoldingMinimum){
                 slideHoldingMinimum = false;
+            } else if (slideHoming){
+                slide.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                slide.setPower(1);
+                slideHoming = false;
             }
 
-            if (opMode.gamepad2.right_trigger > 0.1) {
+            if (opMode.gamepad2.right_trigger > 0.01) {
                 slideTargetTicks = slide.getCurrentPosition() + (int)(opMode.gamepad2.right_trigger * SLIDE_TICK_INCREMENT);
             } else {
                 slideTargetTicks = slide.getCurrentPosition() - (int)(opMode.gamepad2.left_trigger * SLIDE_TICK_INCREMENT);
             }
-            slideTargetTicks = (int)clip(slideTargetTicks, 0, getSlideLimit());
+        } else if (opMode.gamepad2.x &&! slideHoming){
+            slide.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+            slide.setPower(-.7);
+            slideHoming = true;
+        }else if (opMode.gamepad2.y){
+            slideTargetTicks = MAX_SLIDE_TICKS;
         }
-
-        slide.setTargetPosition(slideTargetTicks);
+        slide.setTargetPosition(clip(slideTargetTicks, 0, getSlideLimit()));
     }
 
     public int getSlideTicks() {
         return slide.getCurrentPosition();
     }
 
-    private int getSlideLimit() {
-        return (int) Math.min(MAX_SLIDE_TICKS, (MAX_EXTENSION_AT_HORIZONTAL / Math.abs(Math.cos(Math.toRadians(getPivotAngle())))));
-    }
-
     public double getSlideInches() {
         return slide.getCurrentPosition() / SLIDE_TICKS_PER_INCH;
     }
 
-    public int pivotDegreesToTicks(double degrees) {
-        return (int) (TICKS_PER_PIVOT_DEGREE * (degrees - OFFSET_PIVOT_ANGLE));
+    private int getSlideLimit() {
+        return (int) Math.min(MAX_SLIDE_TICKS, (MAX_EXTENSION_AT_HORIZONTAL / Math.abs(Math.cos(Math.toRadians(getPivotAngle())))));
     }
 
-    public double getPivotAngle() {
-        return (pivot.getCurrentPosition() / TICKS_PER_PIVOT_DEGREE) + OFFSET_PIVOT_ANGLE;
+    public int getPivotTargetTicks(){
+        return pivot.getTargetPosition();
+    }
+
+    public double getPivotCurrentTicks(){
+        return pivot.getCurrentPosition();
+    }
+
+    public double getPivotTargetAngle(){
+        return pivotTicksToDegrees(pivot.getTargetPosition());
+    }
+
+    public double getPivotAngle(){
+        return pivotTicksToDegrees(pivot.getCurrentPosition());
+    }
+
+    private double pivotTicksToDegrees(int pivotTicks) {
+        return (pivotTicks / TICKS_PER_PIVOT_DEGREE) + OFFSET_PIVOT_ANGLE;
+    }
+
+    private int pivotDegreesToTicks(double degrees) {
+        return (int) (TICKS_PER_PIVOT_DEGREE * (degrees - OFFSET_PIVOT_ANGLE));
     }
 }
