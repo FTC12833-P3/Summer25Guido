@@ -16,6 +16,9 @@ public abstract class MM_OpMode extends LinearOpMode {
 
     public MultipleTelemetry multipleTelemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
 
+    public static String scoringLocation = "Basket";
+    public static int alliance = -1;
+
     public void runOpMode(){
         multipleTelemetry.addData("Status", "Initializing... please wait");
         multipleTelemetry.update();
@@ -29,7 +32,13 @@ public abstract class MM_OpMode extends LinearOpMode {
 
             previousGamepad2.copy(currentGamepad2);
             currentGamepad2.copy(gamepad2);
+
+            if (getClass() == MM_Autos.class){
+                robot.drivetrain.navigation.updatePosition(true);
+            }
         }
+
+
 
         runProcedures();
     }

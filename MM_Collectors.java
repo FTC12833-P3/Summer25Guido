@@ -3,8 +3,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -17,6 +17,12 @@ public class MM_Collectors {
     Servo specimenClaw = null;
     ColorRangeSensor innerSampleSensor = null;
     ColorRangeSensor gravityDoorSensor = null;
+
+    public static boolean collect = false;
+
+    ElapsedTime adjustmentTimer = new ElapsedTime();
+    boolean adjusting = false;
+
 
     public MM_Collectors(MM_OpMode opMode) {
         this.opMode = opMode;
@@ -40,24 +46,38 @@ public class MM_Collectors {
             }
         } else if(opMode.gamepad2.left_bumper){
             collectorWheels.setPower(-COLLECT_POWER);
-        } else if(outtakeTimer.milliseconds() < 125) {
-            collectorWheels.setPower(-.3);
-        } else if (collectTime.milliseconds() < 125) {
-            collectorWheels.setPower(.3);
-        } else {
+        } else if (adjusting && adjustmentTimer.milliseconds() > 125){
             collectorWheels.setPower(0);
-
+            adjusting = false;
+        } else if (!adjusting){
+            collectorWheels.setPower(0);
         }
 
         if ( MM_OpMode.currentGamepad2.dpad_down && !MM_OpMode.previousGamepad2.dpad_down){
-            outtakeTimer.reset();
+            collectorWheels.setPower(-.3);
+            adjustmentTimer.reset();
+            adjusting = true;
         }
         if(MM_OpMode.currentGamepad2.dpad_up && !MM_OpMode.previousGamepad2.dpad_up){
-            collectTime.reset();
+            collectorWheels.setPower(.3);
+            adjustmentTimer.reset();
+            adjusting = true;
+        }
+    }
+
+    public void autoRunCollectorWheels(){
+        if (collect){
+            if (!haveSample()){
+                collectorWheels.setPower(COLLECT_POWER);
+            } else {
+                collectorWheels.setPower(0);
+                collect = false;
+            }
         }
     }
 
     private boolean haveSample(){
         return innerSampleSensor.getDistance(DistanceUnit.MM) < 60 || gravityDoorSensor.getDistance(DistanceUnit.MM) < 67.5;
     }
+
 }

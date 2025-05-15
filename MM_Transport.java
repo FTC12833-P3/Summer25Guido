@@ -30,11 +30,15 @@ public class MM_Transport {
     private final double OFFSET_PIVOT_ANGLE = -25; //Compensation for negative start angle: 25.7223
     private final double MAX_PIVOT_ANGLE = 93;
     private final int MAX_PIVOT_TICKS = pivotDegreesToTicks(MAX_PIVOT_ANGLE); //3819
+    private final double PIVOT_THRESHOLD = 100;
 
     private boolean pivotBottomLimitIsHandled = false;
     private boolean slideHoldingMinimum = false;
     private boolean slideHoming = false;
     private int slideTargetTicks;
+
+    public static double targetPivotAngle = -24;
+    public static double slideTargetInches = .5;
 
     public MM_Transport(MM_OpMode opMode) {
         this.opMode = opMode;
@@ -85,6 +89,14 @@ public class MM_Transport {
         pivot.setTargetPosition(pivotTargetTicks);
     }
 
+    public void autoRunPivot(){
+        pivot.setTargetPosition(pivotDegreesToTicks(targetPivotAngle));
+    }
+
+    public boolean pivotDone(){
+        return Math.abs(pivot.getCurrentPosition() - pivotDegreesToTicks(targetPivotAngle)) < PIVOT_THRESHOLD;
+    }
+
     public void runSlide() {
         if((slideBottomLimit.isPressed() || slideHoldingMinimum) && opMode.gamepad2.right_trigger == 0){ //if bottom limit pressed and im not trying to go up
             if(!slideHoldingMinimum) {
@@ -120,6 +132,14 @@ public class MM_Transport {
         slide.setTargetPosition(clip(slideTargetTicks, 0, getSlideLimit()));
     }
 
+    public void autoRunSlide(){
+        slide.setTargetPosition(Math.min(getSlideLimit(), slideInchesToTicks(slideTargetInches)));
+    }
+
+    public boolean slideDone(){
+        return slide.getCurrentPosition() == slideInchesToTicks(slideTargetInches);
+    }
+
     public int getSlideTicks() {
         return slide.getCurrentPosition();
     }
@@ -130,6 +150,10 @@ public class MM_Transport {
 
     private int getSlideLimit() {
         return (int) Math.min(MAX_SLIDE_TICKS, (MAX_EXTENSION_AT_HORIZONTAL / Math.abs(Math.cos(Math.toRadians(getPivotAngle())))));
+    }
+
+    private int slideInchesToTicks(double inches){
+        return (int) (inches * SLIDE_TICKS_PER_INCH);
     }
 
     public int getPivotTargetTicks(){
