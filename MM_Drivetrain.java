@@ -106,12 +106,12 @@ public class MM_Drivetrain {
         double theta = moveAngle - navigation.getHeading() + 45;
 
         //double rotateVector = headingError * ROTATE_P_CO_EFF;
+        double PID = pidController.getPID(Math.hypot(xError, yError));
 
-
-        flPower = 2 * Math.cos(Math.toRadians(theta));
-        frPower = 2 * Math.sin(Math.toRadians(theta));
-        blPower = 2 * Math.sin(Math.toRadians(theta));
-        brPower = 2 * Math.cos(Math.toRadians(theta));
+        flPower = 2 * Math.cos(Math.toRadians(theta)) * PID;
+        frPower = 2 * Math.sin(Math.toRadians(theta)) * PID;
+        blPower = frPower; //I double checked these lines.
+        brPower = flPower; // It turns out that bl power is always the same as fr power and same for the other two, without rotate
 
         normalize();
         setDrivePowers();
@@ -128,14 +128,6 @@ public class MM_Drivetrain {
 
         error = (error >= 180) ? error - 360 : ((error <= -180) ? error + 360 : error); // a nested ternary to determine error
         return error;
-    }
-
-    public double getXError() {
-        return xError;
-    }
-
-    public double getYError() {
-        return yError;
     }
 
 }
