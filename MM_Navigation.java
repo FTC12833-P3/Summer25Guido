@@ -14,6 +14,7 @@ public class MM_Navigation {
     Pose2D currentPos;
     Pose2D AprilTagPos;
     double pastExtrinsicY;
+    MM_Position targetPos = new MM_Position(0, 0, 0);
 
     MM_Navigation(MM_OpMode opMode){
         this.opMode = opMode;
@@ -30,6 +31,7 @@ public class MM_Navigation {
 
         odometryController.update();
         currentPos = odometryController.getPosition();
+        targetPos.setAll(24, 24, 0);
     }
 
     public void updatePosition(){
