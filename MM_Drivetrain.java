@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 public class MM_Drivetrain {
     MM_OpMode opMode;
     MM_Navigation navigation;
+    MM_PID_CONTROLLER pidController;
 
     private final DcMotorEx flMotor;
     private final DcMotorEx frMotor;
@@ -34,6 +35,7 @@ public class MM_Drivetrain {
     public MM_Drivetrain(MM_OpMode opMode){
         this.opMode = opMode;
         navigation = new MM_Navigation(opMode);
+        pidController = new MM_PID_CONTROLLER(1, 1, 1);
 
         flMotor = opMode.hardwareMap.get(DcMotorEx.class, "flMotor");
         frMotor = opMode.hardwareMap.get(DcMotorEx.class, "frMotor");
@@ -103,14 +105,13 @@ public class MM_Drivetrain {
         double moveAngle = Math.toDegrees(Math.atan2(yError, xError));
         double theta = moveAngle - navigation.getHeading() + 45;
 
-        double rotateVector = headingError * ROTATE_P_CO_EFF;
-        double strafeVector = Math.cos(Math.toRadians(theta)) - Math.sin(Math.toRadians(theta));//xError * DRIVE_P_COEFF;
-        double driveVector = Math.sin(Math.toRadians(theta)) + Math.cos(Math.toRadians(theta));//yError * DRIVE_P_COEFF;
+        //double rotateVector = headingError * ROTATE_P_CO_EFF;
 
-        flPower = driveVector + strafeVector - rotateVector;
-        frPower = driveVector - strafeVector + rotateVector;
-        blPower = driveVector - strafeVector - rotateVector;
-        brPower = driveVector + strafeVector + rotateVector;
+
+        flPower = 2 * Math.cos(Math.toRadians(theta));
+        frPower = 2 * Math.sin(Math.toRadians(theta));
+        blPower = 2 * Math.sin(Math.toRadians(theta));
+        brPower = 2 * Math.cos(Math.toRadians(theta));
 
         normalize();
         setDrivePowers();
