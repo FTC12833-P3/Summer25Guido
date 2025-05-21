@@ -25,6 +25,10 @@ public class MM_Drivetrain {
     private double brPower;
     private boolean slowMode = false;
 
+    private double xError = 0;
+    private double yError = 0;
+    private double headingError = 0;
+
     public MM_Drivetrain(MM_OpMode opMode){
         this.opMode = opMode;
         navigation = new MM_Navigation(opMode);
@@ -86,5 +90,52 @@ public class MM_Drivetrain {
         frMotor.setPower(frPower);
         blMotor.setPower(blPower);
         brMotor.setPower(brPower);
+    }
+
+    public void calculateAndSetDrivePowers(double targetX, double targetY, double maxPower, double targetHeading, double rotateFactor) {
+        navigation.updatePosition();
+        xError = targetX - navigation.getX();
+        yError = targetY - navigation.getY();
+        headingError = getHeadingError();
+
+        double moveAngle = Math.toDegrees(Math.atan2(yError, xError));
+        double theta = moveAngle - navigation.getHeading() + 45;
+
+        double rotate = headingError * rotateFactor;
+        double strafe = Math.cos(Math.toRadians(theta)) - Math.sin(Math.toRadians(theta));//xError * DRIVE_P_COEFF;
+        double drive = Math.sin(Math.toRadians(theta)) + Math.cos(Math.toRadians(theta));//yError * DRIVE_P_COEFF;
+
+        flPower = drive + strafe - rotate;
+        frPower = drive - strafe + rotate;
+        blPower = drive - strafe - rotate;
+        brPower = drive + strafe + rotate;
+
+        normalize();
+        setDrivePowers();
+
+        opMode.multipleTelemetry.addData("zMove angle", moveAngle);
+        opMode.multipleTelemetry.addData("zHeading error", headingError);
+        opMode.multipleTelemetry.addData("zXError", xError);
+        opMode.multipleTelemetry.addData("zYError", yError);
+        opMode.multipleTelemetry.addData("zTheta", theta);
+    }
+
+    private double normalizeHeadingError() {
+        double error =  - navigation.getHeading();
+
+        error = (error >= 180) ? error - 360 : ((error <= -180) ? error + 360 : error); // a nested ternary to determine error
+        return error;
+    }
+
+    public double getXError() {
+        return xError;
+    }
+
+    public double getYError() {
+        return yError;
+    }
+
+    public double getHeadingError() {
+        return headingError;
     }
 }

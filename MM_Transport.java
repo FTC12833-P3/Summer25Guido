@@ -20,6 +20,7 @@ public class MM_Transport {
     private final double SLIDE_TICKS_PER_REV = 537.7;
     private final double SLIDE_TICKS_PER_INCH = (SLIDE_TICKS_PER_REV / PULLEY_CIRCUMFERENCE);
     private final int MAX_EXTENSION_AT_HORIZONTAL = 17 * (int) SLIDE_TICKS_PER_INCH;
+    private final double SLIDE_TICK_THRESHOLD = 50;
 
     //pivot constants
     private final int PIVOT_TICK_INCREMENT = 150;
@@ -126,7 +127,7 @@ public class MM_Transport {
             slide.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             slide.setPower(-.7);
             slideHoming = true;
-        }else if (opMode.gamepad2.y){
+        } else if (opMode.gamepad2.y){
             slideTargetTicks = MAX_SLIDE_TICKS;
         }
         slide.setTargetPosition(clip(slideTargetTicks, 0, getSlideLimit()));
@@ -137,7 +138,7 @@ public class MM_Transport {
     }
 
     public boolean slideDone(){
-        return slide.getCurrentPosition() == slideInchesToTicks(slideTargetInches);
+        return (slide.getCurrentPosition() - slideInchesToTicks(slideTargetInches)) < SLIDE_TICK_THRESHOLD;
     }
 
     public int getSlideTicks() {
@@ -154,10 +155,6 @@ public class MM_Transport {
 
     private int slideInchesToTicks(double inches){
         return (int) (inches * SLIDE_TICKS_PER_INCH);
-    }
-
-    public int getPivotTargetTicks(){
-        return pivot.getTargetPosition();
     }
 
     public double getPivotCurrentTicks(){

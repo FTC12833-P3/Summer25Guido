@@ -12,6 +12,7 @@ public class MM_Navigation {
     public GoBildaPinpointDriver odometryController;
 
     Pose2D currentPos;
+    Pose2D targetPos;
     Pose2D AprilTagPos;
     double pastExtrinsicY;
 

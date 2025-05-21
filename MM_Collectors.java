@@ -18,7 +18,14 @@ public class MM_Collectors {
     ColorRangeSensor innerSampleSensor = null;
     ColorRangeSensor gravityDoorSensor = null;
 
-    public static boolean collect = false;
+    public static boolean wheelsCollect = false;
+    public static boolean wheelsScore = false;
+
+    private boolean collectStarted = false;
+    private boolean scoreStarted = false;
+
+    ElapsedTime collectTimer = new ElapsedTime();
+    ElapsedTime scoreTimer = new ElapsedTime();
 
     ElapsedTime adjustmentTimer = new ElapsedTime();
     boolean adjusting = false;
@@ -53,7 +60,7 @@ public class MM_Collectors {
             collectorWheels.setPower(0);
         }
 
-        if ( MM_OpMode.currentGamepad2.dpad_down && !MM_OpMode.previousGamepad2.dpad_down){
+        if (MM_OpMode.currentGamepad2.dpad_down && !MM_OpMode.previousGamepad2.dpad_down){
             collectorWheels.setPower(-.3);
             adjustmentTimer.reset();
             adjusting = true;
@@ -66,12 +73,31 @@ public class MM_Collectors {
     }
 
     public void autoRunCollectorWheels(){
-        if (collect){
-            if (!haveSample()){
+        if (wheelsCollect){
+            if (!collectStarted) {
+                collectTimer.reset();
+                collectStarted = !collectStarted;
+            }
+
+            if (!haveSample() && collectTimer.milliseconds() < 3000){
                 collectorWheels.setPower(COLLECT_POWER);
             } else {
                 collectorWheels.setPower(0);
-                collect = false;
+                wheelsCollect = false;
+                collectStarted = false;
+            }
+        } else if (wheelsScore) {
+            if (!scoreStarted) {
+                scoreTimer.reset();
+                scoreStarted = !scoreStarted;
+            }
+
+            if (haveSample() || scoreTimer.milliseconds() < 3000) {
+                collectorWheels.setPower(-COLLECT_POWER);
+            } else {
+                collectorWheels.setPower(0);
+                wheelsScore = false;
+                scoreStarted = false;
             }
         }
     }
@@ -79,5 +105,4 @@ public class MM_Collectors {
     private boolean haveSample(){
         return innerSampleSensor.getDistance(DistanceUnit.MM) < 60 || gravityDoorSensor.getDistance(DistanceUnit.MM) < 67.5;
     }
-
 }

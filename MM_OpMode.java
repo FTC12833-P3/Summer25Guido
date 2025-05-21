@@ -37,9 +37,6 @@ public abstract class MM_OpMode extends LinearOpMode {
                 robot.drivetrain.navigation.updatePosition(true);
             }
         }
-
-
-
         runProcedures();
     }
 
