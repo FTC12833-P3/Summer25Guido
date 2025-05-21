@@ -14,7 +14,7 @@ public class MM_Navigation {
     Pose2D currentPos;
     Pose2D AprilTagPos;
     double pastExtrinsicY;
-    MM_Position targetPos = new MM_Position(0, 0, 0);
+    public static MM_Position targetPos = new MM_Position(0, 0, 0);
 
     MM_Navigation(MM_OpMode opMode){
         this.opMode = opMode;
