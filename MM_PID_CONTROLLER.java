@@ -23,6 +23,7 @@ public class MM_PID_CONTROLLER {
         double D = (error - prevError) / loopTime.milliseconds() * D_CO_EFF;
         loopTime.reset();
 
+        prevError = error;
         return P + I + D;
     }
 }
