@@ -29,11 +29,13 @@ public class MM_Autos extends MM_OpMode{
             switch (state) {
                 case DRIVE_TO_BASKET:
                     //drive (x, y, heading)
+                    MM_Drivetrain.desiredPower = 0.25;
+                    MM_Navigation.targetPos.setX(24);
                     MM_Transport.targetPivotAngle = 90;
-                    MM_Transport.slideTargetInches = 52;
+                    MM_Transport.slideTargetInches = 15; //52
 
                     previousState = state;
-                    if (robot.transport.slideDone() && robot.transport.pivotDone()) {
+                    if (robot.transport.slideDone() && robot.transport.pivotDone() && robot.drivetrain.driveDone()) {
                         state = STATES.SCORE_SAMPLE;
                     }
                     break;
@@ -100,6 +102,7 @@ public class MM_Autos extends MM_OpMode{
             }
             multipleTelemetry.addData("current state", state.name());
 
+            robot.drivetrain.autoRunDrivetrain();
             robot.transport.autoRunPivot();
             robot.transport.autoRunSlide();
             robot.collectors.autoRunCollectorWheels();

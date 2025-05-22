@@ -20,12 +20,16 @@ public class MM_Drivetrain {
 
     private static final double SLOW_MODE_POWER = .5;
     public static double ROTATE_P_CO_EFF;
+    private final double X_ERROR_THRESHOLD = 1;
+    private final double Y_ERROR_THRESHOLD = 1;
+    private final double HEADING_ERROR_THRESHOLD = 3;
 
     private double flPower;
     private double frPower;
     private double blPower;
     private double brPower;
     private boolean slowMode = false;
+    public static double desiredPower = 1;
 
     private double xError = 0;
     private double yError = 0;
@@ -68,13 +72,13 @@ public class MM_Drivetrain {
     }
 
     private void normalize() {
-        double maxPower = Math.max(Math.abs(flPower), Math.max(Math.abs(frPower), Math.max(Math.abs(blPower), Math.abs(brPower))));
+        double highestCalculatedPower = Math.max(Math.abs(flPower), Math.max(Math.abs(frPower), Math.max(Math.abs(blPower), Math.abs(brPower))));
 
-        if (maxPower > 1) {
-            flPower = (flPower / maxPower);
-            frPower = (frPower / maxPower);
-            blPower = (blPower / maxPower);
-            brPower = (brPower / maxPower);
+        if (highestCalculatedPower > 1) {
+            flPower = (flPower / highestCalculatedPower) * desiredPower;
+            frPower = (frPower / highestCalculatedPower) * desiredPower;
+            blPower = (blPower / highestCalculatedPower) * desiredPower;
+            brPower = (brPower / highestCalculatedPower) * desiredPower;
         }
     }
 
@@ -96,8 +100,8 @@ public class MM_Drivetrain {
 
     public void autoRunDrivetrain() {
         navigation.updatePosition();
-        xError = navigation.targetPos.getX() - navigation.getX();
-        yError = navigation.targetPos.getY() - navigation.getY();
+        xError = MM_Navigation.targetPos.getX() - navigation.getX();
+        yError = MM_Navigation.targetPos.getY() - navigation.getY();
         headingError = getNormalizedHeadingError();
 
         double moveAngle = Math.toDegrees(Math.atan2(yError, xError));
@@ -122,8 +126,12 @@ public class MM_Drivetrain {
         opMode.multipleTelemetry.addData("zTheta", theta);
     }
 
+    public boolean driveDone() {
+        return xError < X_ERROR_THRESHOLD && yError < Y_ERROR_THRESHOLD && headingError < HEADING_ERROR_THRESHOLD;
+    }
+
     private double getNormalizedHeadingError() {
-        double error =  navigation.targetPos.getHeading() - navigation.getHeading();
+        double error =  MM_Navigation.targetPos.getHeading() - navigation.getHeading();
 
         error = (error >= 180) ? error - 360 : ((error <= -180) ? error + 360 : error); // a nested ternary to determine error
         return error;

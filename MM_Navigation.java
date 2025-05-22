@@ -31,7 +31,7 @@ public class MM_Navigation {
 
         odometryController.update();
         currentPos = odometryController.getPosition();
-        targetPos.setAll(24, 24, 0);
+        targetPos.setAll(0, 0, 0);
     }
 
     public void updatePosition(){
