@@ -38,6 +38,13 @@ public abstract class MM_OpMode extends LinearOpMode {
             }
         }
         runProcedures();
+        if(isStopRequested()){
+            MM_Navigation.targetPos.setAll(0,0,0);
+            MM_Transport.slideTargetInches = 0;
+            MM_Transport.targetPivotAngle = 0;
+            MM_Collectors.wheelsCollect = false;
+            MM_Collectors.wheelsScore = false;
+        }
     }
 
     public abstract void runProcedures();

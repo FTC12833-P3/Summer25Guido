@@ -3,10 +3,11 @@ package org.firstinspires.ftc.teamcode;
 import static org.firstinspires.ftc.teamcode.MM_OpMode.currentGamepad1;
 import static org.firstinspires.ftc.teamcode.MM_OpMode.previousGamepad1;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-
+@Config
 public class MM_Drivetrain {
     MM_OpMode opMode;
     MM_Navigation navigation;
@@ -18,6 +19,7 @@ public class MM_Drivetrain {
     private final Rev2mDistanceSensor backDistance;
 
     private static final double SLOW_MODE_POWER = .5;
+    public static double ROTATE_P_CO_EFF;
 
     private double flPower;
     private double frPower;
@@ -92,23 +94,23 @@ public class MM_Drivetrain {
         brMotor.setPower(brPower);
     }
 
-    public void calculateAndSetDrivePowers(double targetX, double targetY, double maxPower, double targetHeading, double rotateFactor) {
+    public void autoRunDrivetrain() {
         navigation.updatePosition();
-        xError = targetX - navigation.getX();
-        yError = targetY - navigation.getY();
-        headingError = getHeadingError();
+        xError = navigation.targetPos.getX() - navigation.getX();
+        yError = navigation.targetPos.getY() - navigation.getY();
+        headingError = getNormalizedHeadingError();
 
         double moveAngle = Math.toDegrees(Math.atan2(yError, xError));
         double theta = moveAngle - navigation.getHeading() + 45;
 
-        double rotate = headingError * rotateFactor;
-        double strafe = Math.cos(Math.toRadians(theta)) - Math.sin(Math.toRadians(theta));//xError * DRIVE_P_COEFF;
-        double drive = Math.sin(Math.toRadians(theta)) + Math.cos(Math.toRadians(theta));//yError * DRIVE_P_COEFF;
+        double rotateVector = headingError * ROTATE_P_CO_EFF;
+        double strafeVector = Math.cos(Math.toRadians(theta)) - Math.sin(Math.toRadians(theta));//xError * DRIVE_P_COEFF;
+        double driveVector = Math.sin(Math.toRadians(theta)) + Math.cos(Math.toRadians(theta));//yError * DRIVE_P_COEFF;
 
-        flPower = drive + strafe - rotate;
-        frPower = drive - strafe + rotate;
-        blPower = drive - strafe - rotate;
-        brPower = drive + strafe + rotate;
+        flPower = driveVector + strafeVector - rotateVector;
+        frPower = driveVector - strafeVector + rotateVector;
+        blPower = driveVector - strafeVector - rotateVector;
+        brPower = driveVector + strafeVector + rotateVector;
 
         normalize();
         setDrivePowers();
@@ -120,8 +122,8 @@ public class MM_Drivetrain {
         opMode.multipleTelemetry.addData("zTheta", theta);
     }
 
-    private double normalizeHeadingError() {
-        double error =  - navigation.getHeading();
+    private double getNormalizedHeadingError() {
+        double error =  navigation.targetPos.getHeading() - navigation.getHeading();
 
         error = (error >= 180) ? error - 360 : ((error <= -180) ? error + 360 : error); // a nested ternary to determine error
         return error;
@@ -135,7 +137,4 @@ public class MM_Drivetrain {
         return yError;
     }
 
-    public double getHeadingError() {
-        return headingError;
-    }
 }
