@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-
+@Config
 public class MM_Navigation {
     public static final double TAG_FLIP_THRESHOLD = .2;
     private final MM_OpMode opMode;
@@ -55,7 +57,7 @@ public class MM_Navigation {
                 opMode.multipleTelemetry.addData("yApril", round2Dec(AprilTagPos.getY(DistanceUnit.INCH)));
                 opMode.multipleTelemetry.addData("yawApril", round2Dec(AprilTagPos.getHeading(AngleUnit.DEGREES)));
 
-                if ((opMode.opModeInInit() && MM_OpMode.currentGamepad1.b && !MM_OpMode.previousGamepad1.b) || !opMode.opModeInInit()) {
+                if ((opMode.opModeInInit() && MM_OpMode.currentGamepad1.b && !MM_OpMode.previousGamepad1.b) || (!opMode.opModeInInit() && opMode.getClass() != MM_Autos.class)) {
                     odometryController.setPosition(AprilTagPos);
                     if(opMode.opModeInInit()){
                         MM_OpMode.alliance = MM_VisionPortal.startingTag == 13 || MM_VisionPortal.startingTag == 11? -1: 1;

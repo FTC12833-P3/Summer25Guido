@@ -52,7 +52,7 @@ public class MM_Transport {
         pivot.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setTargetPosition(0);
         if (opMode.getClass() == MM_Autos.class) {
-            pivot.setPower(.85);
+            pivot.setPower(.7);
             pivot.setTargetPosition(1789);
         }
         pivot.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
@@ -138,7 +138,7 @@ public class MM_Transport {
     }
 
     public boolean slideDone(){
-        return (slide.getCurrentPosition() - slideInchesToTicks(slideTargetInches)) < SLIDE_TICK_THRESHOLD;
+        return Math.abs(slide.getCurrentPosition() - slideInchesToTicks(slideTargetInches)) < SLIDE_TICK_THRESHOLD;
     }
 
     public int getSlideTicks() {

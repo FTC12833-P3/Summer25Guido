@@ -40,6 +40,7 @@ public class MM_Collectors {
         gravityDoorSensor = opMode.hardwareMap.get(ColorRangeSensor.class, "outerSampleLimit");
 
         collectorWheels.setDirection(DcMotorEx.Direction.REVERSE);
+        specimenClaw.setPosition(.5);
     }
 
     public void runCollectorWheels(){
@@ -92,14 +93,18 @@ public class MM_Collectors {
                 scoreStarted = !scoreStarted;
             }
 
-            if (haveSample() || scoreTimer.milliseconds() < 3000) {
-                collectorWheels.setPower(-COLLECT_POWER);
+            if (haveSample() || scoreTimer.milliseconds() < 1000) {
+                collectorWheels.setPower(COLLECT_POWER);
             } else {
                 collectorWheels.setPower(0);
                 wheelsScore = false;
                 scoreStarted = false;
             }
         }
+    }
+
+    public void runSpecClaw(){
+
     }
 
     private boolean haveSample(){

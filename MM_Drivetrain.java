@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 public class MM_Drivetrain {
     MM_OpMode opMode;
     MM_Navigation navigation;
-    MM_PID_CONTROLLER pidController;
+    public static MM_PID_CONTROLLER pidController = new MM_PID_CONTROLLER(0.2, 0, 30);
 
     private final DcMotorEx flMotor;
     private final DcMotorEx frMotor;
@@ -20,9 +20,9 @@ public class MM_Drivetrain {
     private final Rev2mDistanceSensor backDistance;
 
     private static final double SLOW_MODE_POWER = .5;
-    public static double ROTATE_P_CO_EFF;
-    private final double X_ERROR_THRESHOLD = 1;
-    private final double Y_ERROR_THRESHOLD = 1;
+    public static double ROTATE_P_CO_EFF = .05;
+    public static double X_ERROR_THRESHOLD = .5;
+    public static double Y_ERROR_THRESHOLD = .5;
     private final double HEADING_ERROR_THRESHOLD = 3;
 
     private double flPower;
@@ -39,7 +39,6 @@ public class MM_Drivetrain {
     public MM_Drivetrain(MM_OpMode opMode){
         this.opMode = opMode;
         navigation = new MM_Navigation(opMode);
-        pidController = new MM_PID_CONTROLLER(0.5, 0, 50);
 
         flMotor = opMode.hardwareMap.get(DcMotorEx.class, "flMotor");
         frMotor = opMode.hardwareMap.get(DcMotorEx.class, "frMotor");
@@ -100,6 +99,13 @@ public class MM_Drivetrain {
         brMotor.setPower(brPower);
     }
 
+    private void setDrivePowersToZero() {
+        flMotor.setPower(0);
+        frMotor.setPower(0);
+        blMotor.setPower(0);
+        brMotor.setPower(0);
+    }
+
     public void autoRunDrivetrain() {
         navigation.updatePosition();
         xError = MM_Navigation.targetPos.getX() - navigation.getX();
@@ -109,26 +115,33 @@ public class MM_Drivetrain {
         double moveAngle = Math.toDegrees(Math.atan2(yError, xError));
         double theta = moveAngle - navigation.getHeading() + 45;
 
-        //double rotateVector = headingError * ROTATE_P_CO_EFF;
+        double rotateVector = headingError * ROTATE_P_CO_EFF;
         double PID = pidController.getPID(Math.hypot(xError, yError));
 
-        flPower = 2 * Math.cos(Math.toRadians(theta)) * PID;
-        frPower = 2 * Math.sin(Math.toRadians(theta)) * PID;
-        blPower = frPower; //I double checked these lines.
-        brPower = flPower; // It turns out that bl power is always the same as fr power and same for the other two, without rotate
+        flPower = (2 * Math.cos(Math.toRadians(theta)) * PID) - rotateVector;
+        frPower = (2 * Math.sin(Math.toRadians(theta)) * PID) + rotateVector;
+        blPower = (2 * Math.sin(Math.toRadians(theta)) * PID) - rotateVector; //I double checked these lines.
+        brPower = (2 * Math.cos(Math.toRadians(theta)) * PID) + rotateVector; // It turns out that bl power is always the same as fr power and same for the other two, without rotate
 
-        normalize();
-        setDrivePowers();
+//        if(Math.abs(Math.hypot(xError, yError)) < .15){
+//            setDrivePowersToZero();
+//        } else {
+            setDrivePowers();
+        //}
 
         opMode.multipleTelemetry.addData("zMove angle", moveAngle);
         opMode.multipleTelemetry.addData("zHeading error", headingError);
         opMode.multipleTelemetry.addData("zXError", xError);
         opMode.multipleTelemetry.addData("zYError", yError);
         opMode.multipleTelemetry.addData("zTheta", theta);
+        opMode.multipleTelemetry.addData("D", pidController.getD());
+        opMode.multipleTelemetry.addData("rate of change of hypot error", pidController.getD() / MM_PID_CONTROLLER.D_COEFF);
+        opMode.multipleTelemetry.addData("P", pidController.getP());
+        opMode.multipleTelemetry.addData("hypot error", Math.hypot(xError, yError));
     }
 
     public boolean driveDone() {
-        return xError < X_ERROR_THRESHOLD && yError < Y_ERROR_THRESHOLD && headingError < HEADING_ERROR_THRESHOLD;
+        return Math.abs(xError) < X_ERROR_THRESHOLD && Math.abs(yError) < Y_ERROR_THRESHOLD && Math.abs(headingError) < HEADING_ERROR_THRESHOLD;
     }
 
     private double getNormalizedHeadingError() {

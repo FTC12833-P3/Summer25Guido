@@ -44,6 +44,9 @@ public abstract class MM_OpMode extends LinearOpMode {
             MM_Transport.targetPivotAngle = 0;
             MM_Collectors.wheelsCollect = false;
             MM_Collectors.wheelsScore = false;
+            MM_Drivetrain.Y_ERROR_THRESHOLD = .5;
+            MM_Drivetrain.X_ERROR_THRESHOLD = .5;
+            MM_Drivetrain.desiredPower = 1;
         }
     }
 
