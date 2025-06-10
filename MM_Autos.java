@@ -106,13 +106,12 @@ public class MM_Autos extends MM_OpMode{
 
                 case DRIVE_TO_PARK:
                     if(!scoringLocation.equals("Chamber")){
-                        MM_Navigation.targetPos.setAll(33, 10, 180);
+                        MM_Navigation.targetPos.setAll(34, 10, 180);
                         MM_Transport.targetPivotAngle = -23.5;
                         MM_Transport.slideTargetInches = .5;
-                        MM_Drivetrain.X_ERROR_THRESHOLD = .2;
-                        MM_Drivetrain.Y_ERROR_THRESHOLD = .2;
+                        MM_Drivetrain.Y_ERROR_THRESHOLD = 6;
                     }
-                    if(robot.drivetrain.driveDone() && state == previousState){
+                    if(state == previousState && robot.drivetrain.driveDone()){
                         state = STATES.ASCEND;
                     }
                     previousState = state;
@@ -121,7 +120,8 @@ public class MM_Autos extends MM_OpMode{
 
                 case ASCEND:
                     //ascend with zip tie
-                    if(previousState == state && robot.drivetrain.driveDone()){
+                    MM_Navigation.targetPos.setX(28);
+                    if(robot.drivetrain.driveDone() && previousState == state){
                         robot.ascent.park();
                     }
                     previousState = state;

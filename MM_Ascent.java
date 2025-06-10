@@ -42,6 +42,6 @@ public class MM_Ascent {
     }
 
     public void park(){
-        parkServo.setPosition(.1);
+        parkServo.setPosition(.08);
     }
 }
