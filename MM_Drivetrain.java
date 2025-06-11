@@ -7,8 +7,12 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 @Config
 public class MM_Drivetrain {
+    public static final double DISTANCE_P_COEFF = 0.04;
     MM_OpMode opMode;
     MM_Navigation navigation;
     public static MM_PID_CONTROLLER pidController = new MM_PID_CONTROLLER(0.2, 0, 30);
@@ -31,6 +35,10 @@ public class MM_Drivetrain {
     private double brPower;
     private boolean slowMode = false;
     public static double desiredPower = 1;
+    public static boolean useDistance = false;
+    public static double targetDistance = 5;
+
+
 
     private double xError = 0;
     private double yError = 0;
@@ -112,23 +120,34 @@ public class MM_Drivetrain {
         yError = MM_Navigation.targetPos.getY() - navigation.getY();
         headingError = getNormalizedHeadingError();
 
+        double rotateVector = headingError * ROTATE_P_CO_EFF;
         double moveAngle = Math.toDegrees(Math.atan2(yError, xError));
         double theta = moveAngle - navigation.getHeading() + 45;
+        if(!useDistance) {
+            double PID = pidController.getPID(Math.hypot(xError, yError));
 
-        double rotateVector = headingError * ROTATE_P_CO_EFF;
-        double PID = pidController.getPID(Math.hypot(xError, yError));
+            flPower = (2 * Math.cos(Math.toRadians(theta)) * PID) - rotateVector;
+            frPower = (2 * Math.sin(Math.toRadians(theta)) * PID) + rotateVector;
+            blPower = (2 * Math.sin(Math.toRadians(theta)) * PID) - rotateVector; //I double checked these lines.
+            brPower = (2 * Math.cos(Math.toRadians(theta)) * PID) + rotateVector;
+        }else {
+            yError = targetDistance - backDistance.getDistance(DistanceUnit.INCH);
 
-        flPower = (2 * Math.cos(Math.toRadians(theta)) * PID) - rotateVector;
-        frPower = (2 * Math.sin(Math.toRadians(theta)) * PID) + rotateVector;
-        blPower = (2 * Math.sin(Math.toRadians(theta)) * PID) - rotateVector; //I double checked these lines.
-        brPower = (2 * Math.cos(Math.toRadians(theta)) * PID) + rotateVector; // It turns out that bl power is always the same as fr power and same for the other two, without rotate
+            flPower = (yError * DISTANCE_P_COEFF) - rotateVector;
+            frPower = (yError * DISTANCE_P_COEFF) + rotateVector;
+            if (Math.abs(yError) < .37){
+                flPower = 0;
+                frPower = 0;
+            }
+            blPower = flPower;
+            brPower = frPower;
 
-//        if(Math.abs(Math.hypot(xError, yError)) < .15){
-//            setDrivePowersToZero();
-//        } else {
-            setDrivePowers();
-        //}
+            if (Math.abs(yError) < .37){
+                flPower = 0;
+            }
+        }
 
+        setDrivePowers();
         opMode.multipleTelemetry.addData("zMove angle", moveAngle);
         opMode.multipleTelemetry.addData("zHeading error", headingError);
         opMode.multipleTelemetry.addData("zXError", xError);
@@ -142,6 +161,10 @@ public class MM_Drivetrain {
 
     public boolean driveDone() {
         return Math.abs(xError) < X_ERROR_THRESHOLD && Math.abs(yError) < Y_ERROR_THRESHOLD && Math.abs(headingError) < HEADING_ERROR_THRESHOLD;
+    }
+
+    public boolean distanceDriveDone(){
+        return targetDistance - backDistance.getDistance(DistanceUnit.INCH) < 0.37;
     }
 
     private double getNormalizedHeadingError() {

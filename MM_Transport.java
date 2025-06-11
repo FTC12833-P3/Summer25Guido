@@ -127,14 +127,23 @@ public class MM_Transport {
             slide.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             slide.setPower(-.7);
             slideHoming = true;
-        } else if (opMode.gamepad2.y){
+        } else if (opMode.gamepad2.y && !opMode.gamepad2.b){
             slideTargetTicks = MAX_SLIDE_TICKS;
         }
+
+        if (opMode.gamepad2.y && opMode.gamepad2.b ){
+            slideTargetTicks = 1828;
+        }
+
         slide.setTargetPosition(clip(slideTargetTicks, 0, getSlideLimit()));
     }
 
     public void autoRunSlide(){
         slide.setTargetPosition(Math.min(getSlideLimit(), slideInchesToTicks(slideTargetInches)));
+    }
+
+    public void setPivotAngle(double angle){
+        pivot.setTargetPosition(pivotDegreesToTicks(angle));
     }
 
     public boolean slideDone(){

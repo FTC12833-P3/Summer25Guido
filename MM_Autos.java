@@ -25,6 +25,9 @@ public class MM_Autos extends MM_OpMode{
 
     @Override
     public void runProcedures(){
+        if (scoringLocation.equals("Chamber")){
+            state = STATES.DRIVE_TO_CHAMBER;
+        }
         while(opModeIsActive()){
             switch (state) {
                 case DRIVE_TO_BASKET:
@@ -37,13 +40,24 @@ public class MM_Autos extends MM_OpMode{
                         state = STATES.SCORE_SAMPLE;
                     }
                     break;
+
+
+                case DRIVE_TO_CHAMBER:
+                    MM_Navigation.targetPos.setAll(0, 41.1, 90);
+                    MM_Transport.slideTargetInches = 16.1;
+                    MM_Transport.targetPivotAngle = 92;
+                    if(robot.drivetrain.driveDone() && robot.transport.pivotDone() && robot.transport.slideDone()){
+                        state = STATES.SCORE_SPECIMEN;
+                    }
+
+                    break;
                 case SCORE_SAMPLE:
                     if (previousState != state) {
-                        MM_Collectors.wheelsScore = true;
+                        MM_Collectors.score = true;
                     }
 
                     previousState = state;
-                    if (!MM_Collectors.wheelsScore) {
+                    if (!MM_Collectors.score) {
                         cycles ++;
 
 //                        if (scoringLocation.equals("basket") && cycles > 4) {
@@ -56,6 +70,19 @@ public class MM_Autos extends MM_OpMode{
 
                         //}
                     }
+                    break;
+                case SCORE_SPECIMEN:
+                    if(state != previousState) {
+                        MM_Navigation.targetPos.setHeading(90);
+                        MM_Drivetrain.targetDistance = 5.9;
+                        MM_Drivetrain.useDistance = true;
+                    }
+
+                    if(robot.drivetrain.distanceDriveDone()){
+                        MM_Collectors.score = true;
+                        state = STATES.COLLECT_SPECIMEN;
+                    }
+
                     break;
 
                 case LOOK_AT_APRILTAG:
@@ -90,20 +117,25 @@ public class MM_Autos extends MM_OpMode{
                     break;
 
                 case COLLECT_SAMPLE:
+
                     if (previousState != STATES.COLLECT_SAMPLE && cycles < 3) {
                         MM_Transport.targetPivotAngle = -14.2; //should be -12 to -14 or so
-                        MM_Collectors.wheelsCollect = true;
+                        MM_Collectors.collect = true;
                     } else if (previousState != STATES.COLLECT_SAMPLE){
                         MM_Transport.targetPivotAngle = -11; //should be -12 to -14 or so
-                        MM_Collectors.wheelsCollect = true;
+                        MM_Collectors.collect = true;
                     }
 
                     previousState = state;
-                    if (!MM_Collectors.wheelsCollect) {
+                    if (!MM_Collectors.collect) {
                         state = STATES.DRIVE_TO_BASKET;
                     }
                     break;
 
+
+                case COLLECT_SPECIMEN:
+
+                    break;
                 case DRIVE_TO_PARK:
                     if(!scoringLocation.equals("Chamber")){
                         MM_Navigation.targetPos.setAll(34, 10, 180);
@@ -132,6 +164,7 @@ public class MM_Autos extends MM_OpMode{
             robot.transport.autoRunPivot();
             robot.transport.autoRunSlide();
             robot.collectors.autoRunCollectorWheels();
+            robot.collectors.autoRunSpecClaw();
             telemetry();
         }
     }
