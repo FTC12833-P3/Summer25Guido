@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.util.Range.clip;
+
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
@@ -36,6 +38,7 @@ public class MM_Transport {
     private boolean pivotBottomLimitIsHandled = false;
     private boolean slideHoldingMinimum = false;
     private boolean slideHoming = false;
+    private boolean pivotHoming = false;
     private int slideTargetTicks;
 
     public static double targetPivotAngle = -24;
@@ -86,6 +89,11 @@ public class MM_Transport {
                 pivot.setPower(1);
             }
             pivotTargetTicks = (int)clip(pivot.getCurrentPosition() + -opMode.gamepad2.left_stick_y * PIVOT_TICK_INCREMENT, 0, MAX_PIVOT_TICKS);
+            pivotHoming = false;
+        } else if (opMode.gamepad2.x) {
+            pivotHoming = true;
+            pivot.setPower(-0.7);
+            pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
         pivot.setTargetPosition(pivotTargetTicks);
     }
@@ -164,6 +172,10 @@ public class MM_Transport {
 
     private int slideInchesToTicks(double inches){
         return (int) (inches * SLIDE_TICKS_PER_INCH);
+    }
+
+    public double slideTicksToInches(int ticks){
+        return (ticks / SLIDE_TICKS_PER_INCH);
     }
 
     public double getPivotCurrentTicks(){

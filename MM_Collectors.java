@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class MM_Collectors {
     MM_OpMode opMode;
 
-    private final double COLLECT_POWER = 1;
+    private final double COLLECT_POWER = .8;
 
     DcMotorEx collectorWheels = null;
     Servo specimenClaw = null;
@@ -63,7 +63,7 @@ public class MM_Collectors {
                 collectorWheels.setPower(COLLECT_POWER);
             }
         } else if(opMode.gamepad2.left_bumper && !opMode.gamepad2.b){
-            collectorWheels.setPower(-COLLECT_POWER);
+            collectorWheels.setPower(-1);
         } else if (adjusting && adjustmentTimer.milliseconds() > 125){
             collectorWheels.setPower(0);
             adjusting = false;

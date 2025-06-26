@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 @Autonomous(name="Autos", group="MM")
 public class MM_Autos extends MM_OpMode{
     private int cycles = 0;
+    private boolean scoreIsHandled = false;
 
     private enum STATES {
         DRIVE_TO_COLLECT_SAMPLE,
@@ -79,8 +80,15 @@ public class MM_Autos extends MM_OpMode{
                     }
 
                     if(robot.drivetrain.distanceDriveDone()){
-                        MM_Collectors.score = true;
-                        state = STATES.COLLECT_SPECIMEN;
+                        MM_Transport.slideTargetInches = robot.transport.slideTicksToInches(1350);
+                        if (robot.transport.slideDone() && !scoreIsHandled) {
+                            MM_Collectors.score = true;
+                            scoreIsHandled = true;
+                        }
+                        if (scoreIsHandled && !MM_Collectors.score) {
+                            scoreIsHandled = false;
+                            state = STATES.COLLECT_SPECIMEN;
+                        }
                     }
 
                     break;

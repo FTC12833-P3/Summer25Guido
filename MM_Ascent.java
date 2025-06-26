@@ -35,7 +35,6 @@ public class MM_Ascent {
         liftRight.setPosition(.87);
         liftLeft.setPosition(.13);
 
-
         liftMotor = opMode.hardwareMap.get(DcMotorEx.class, "liftMotor");
 
         if(opMode.getClass() == MM_Autos.class) {
