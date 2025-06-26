@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 @Autonomous(name="Autos", group="MM")
 public class MM_Autos extends MM_OpMode{
     private int cycles = 0;
+    private boolean scoreIsHandled = false;
 
     private enum STATES {
         DRIVE_TO_COLLECT_SAMPLE,
@@ -25,37 +26,71 @@ public class MM_Autos extends MM_OpMode{
 
     @Override
     public void runProcedures(){
+        if (scoringLocation.equals("Chamber")){
+            state = STATES.DRIVE_TO_CHAMBER;
+        }
         while(opModeIsActive()){
             switch (state) {
                 case DRIVE_TO_BASKET:
                     //drive (x, y, heading)
-                    MM_Drivetrain.desiredPower = 0.25;
-                    MM_Navigation.targetPos.setX(24);
-                    MM_Transport.targetPivotAngle = 90;
-                    MM_Transport.slideTargetInches = 15; //52
-
+                    MM_Navigation.targetPos.setAll(53.8, 52.5, 225);
+                    MM_Transport.targetPivotAngle = 93;
+                    MM_Transport.slideTargetInches = 26;
                     previousState = state;
-                    if (robot.transport.slideDone() && robot.transport.pivotDone() && robot.drivetrain.driveDone()) {
+                    if (robot.drivetrain.driveDone() && robot.transport.slideDone() && robot.transport.pivotDone()) {
                         state = STATES.SCORE_SAMPLE;
                     }
                     break;
+
+
+                case DRIVE_TO_CHAMBER:
+                    MM_Navigation.targetPos.setAll(0, 41.1, 90);
+                    MM_Transport.slideTargetInches = 16.1;
+                    MM_Transport.targetPivotAngle = 92;
+                    if(robot.drivetrain.driveDone() && robot.transport.pivotDone() && robot.transport.slideDone()){
+                        state = STATES.SCORE_SPECIMEN;
+                    }
+
+                    break;
                 case SCORE_SAMPLE:
                     if (previousState != state) {
-                        MM_Collectors.wheelsScore = true;
+                        MM_Collectors.score = true;
                     }
 
                     previousState = state;
-                    if (!MM_Collectors.wheelsScore) {
+                    if (!MM_Collectors.score) {
                         cycles ++;
 
-                        if (scoringLocation.equals("basket") && cycles > 4) {
-                            state = STATES.ASCEND;
-                        } else if (scoringLocation.equals("chamber") && cycles > 4) {
-                            state = STATES.DRIVE_TO_PARK;
-                        } else {
-                            state = STATES.LOOK_AT_APRILTAG;
+//                        if (scoringLocation.equals("basket") && cycles > 4) {
+//                            state = STATES.ASCEND;
+//                        } else if (scoringLocation.equals("chamber") && cycles > 4) {
+//                            state = STATES.DRIVE_TO_PARK;
+//                        } else {
+
+                            state = STATES.DRIVE_TO_COLLECT_SAMPLE;
+
+                        //}
+                    }
+                    break;
+                case SCORE_SPECIMEN:
+                    if(state != previousState) {
+                        MM_Navigation.targetPos.setHeading(90);
+                        MM_Drivetrain.targetDistance = 5.9;
+                        MM_Drivetrain.useDistance = true;
+                    }
+
+                    if(robot.drivetrain.distanceDriveDone()){
+                        MM_Transport.slideTargetInches = robot.transport.slideTicksToInches(1350);
+                        if (robot.transport.slideDone() && !scoreIsHandled) {
+                            MM_Collectors.score = true;
+                            scoreIsHandled = true;
+                        }
+                        if (scoreIsHandled && !MM_Collectors.score) {
+                            scoreIsHandled = false;
+                            state = STATES.COLLECT_SPECIMEN;
                         }
                     }
+
                     break;
 
                 case LOOK_AT_APRILTAG:
@@ -68,36 +103,67 @@ public class MM_Autos extends MM_OpMode{
 
                 case DRIVE_TO_COLLECT_SAMPLE:
                     //drive (x, y, heading)
-                    MM_Transport.slideTargetInches = 5.5;
-                    MM_Transport.targetPivotAngle = 0;
+                    if(cycles < 3) {
+                        MM_Navigation.targetPos.setAll(46.6 + (10 * (cycles - 1)), 38.5, 270);
+                        MM_Transport.slideTargetInches = 5.5;
+                        MM_Transport.targetPivotAngle = 0;
+                    } else if (cycles < 4){
+                        MM_Navigation.targetPos.setAll(58.75, 46.8, 285.86);
+                        MM_Transport.targetPivotAngle = 0;
+                        MM_Transport.slideTargetInches = 15.5;
+                    }
+
 
                     previousState = state;
-                    if (robot.transport.slideDone() && robot.transport.pivotDone()) {
-                        state = STATES.COLLECT_SAMPLE;
+                    if (robot.drivetrain.driveDone() && robot.transport.slideDone() && robot.transport.pivotDone()) {
+                        if(cycles < 4) {
+                            state = STATES.COLLECT_SAMPLE;
+                        } else {
+                            state = STATES.DRIVE_TO_PARK;
+                        }
                     }
                     break;
 
                 case COLLECT_SAMPLE:
-                    if (previousState != STATES.COLLECT_SAMPLE) {
-                        MM_Transport.targetPivotAngle = 0; //should be -12 to -14 or so
-                        MM_Collectors.wheelsCollect = true;
+
+                    if (previousState != STATES.COLLECT_SAMPLE && cycles < 3) {
+                        MM_Transport.targetPivotAngle = -14.2; //should be -12 to -14 or so
+                        MM_Collectors.collect = true;
+                    } else if (previousState != STATES.COLLECT_SAMPLE){
+                        MM_Transport.targetPivotAngle = -11; //should be -12 to -14 or so
+                        MM_Collectors.collect = true;
                     }
 
                     previousState = state;
-                    if (!MM_Collectors.wheelsCollect) {
+                    if (!MM_Collectors.collect) {
                         state = STATES.DRIVE_TO_BASKET;
                     }
                     break;
 
-                case DRIVE_TO_PARK:
-                    //drive (x, y, heading)
 
+                case COLLECT_SPECIMEN:
+
+                    break;
+                case DRIVE_TO_PARK:
+                    if(!scoringLocation.equals("Chamber")){
+                        MM_Navigation.targetPos.setAll(34, 10, 180);
+                        MM_Transport.targetPivotAngle = -23.5;
+                        MM_Transport.slideTargetInches = .5;
+                        MM_Drivetrain.Y_ERROR_THRESHOLD = 6;
+                    }
+                    if(state == previousState && robot.drivetrain.driveDone()){
+                        state = STATES.ASCEND;
+                    }
                     previousState = state;
+
                     break;
 
                 case ASCEND:
-                    //drive (x, y, heading)
                     //ascend with zip tie
+                    MM_Navigation.targetPos.setX(28);
+                    if(robot.drivetrain.driveDone() && previousState == state){
+                        robot.ascent.park();
+                    }
                     previousState = state;
             }
             multipleTelemetry.addData("current state", state.name());
@@ -106,6 +172,7 @@ public class MM_Autos extends MM_OpMode{
             robot.transport.autoRunPivot();
             robot.transport.autoRunSlide();
             robot.collectors.autoRunCollectorWheels();
+            robot.collectors.autoRunSpecClaw();
             telemetry();
         }
     }

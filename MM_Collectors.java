@@ -11,15 +11,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class MM_Collectors {
     MM_OpMode opMode;
 
-    private final double COLLECT_POWER = 1;
+    private final double COLLECT_POWER = .8;
 
     DcMotorEx collectorWheels = null;
     Servo specimenClaw = null;
     ColorRangeSensor innerSampleSensor = null;
     ColorRangeSensor gravityDoorSensor = null;
 
-    public static boolean wheelsCollect = false;
-    public static boolean wheelsScore = false;
+    public static boolean collect = false;
+    public static boolean score = false;
 
     private boolean collectStarted = false;
     private boolean scoreStarted = false;
@@ -40,10 +40,21 @@ public class MM_Collectors {
         gravityDoorSensor = opMode.hardwareMap.get(ColorRangeSensor.class, "outerSampleLimit");
 
         collectorWheels.setDirection(DcMotorEx.Direction.REVERSE);
+        specimenClaw.setPosition(.5);
+
+        if (MM_OpMode.scoringLocation.equals("Chamber")){
+            specimenClaw.setPosition(.78);
+        }
+    }
+
+    public void runSpecClaw(){
+        if((MM_OpMode.currentGamepad2.right_bumper && !MM_OpMode.previousGamepad2.right_bumper) && opMode.gamepad2.b){
+            specimenClaw.setPosition(specimenClaw.getPosition() == .5? .78: .5);
+        }
     }
 
     public void runCollectorWheels(){
-        if(opMode.gamepad2.right_bumper){
+        if(opMode.gamepad2.right_bumper && !opMode.gamepad2.b){
             if(opMode.robot.transport.getPivotCurrentTicks() >= (opMode.robot.transport.getMaxPivotTicks() *.75) || opMode.gamepad2.a){
                 collectorWheels.setPower(COLLECT_POWER);
             } else if (haveSample()) {
@@ -51,8 +62,8 @@ public class MM_Collectors {
             } else {
                 collectorWheels.setPower(COLLECT_POWER);
             }
-        } else if(opMode.gamepad2.left_bumper){
-            collectorWheels.setPower(-COLLECT_POWER);
+        } else if(opMode.gamepad2.left_bumper && !opMode.gamepad2.b){
+            collectorWheels.setPower(-1);
         } else if (adjusting && adjustmentTimer.milliseconds() > 125){
             collectorWheels.setPower(0);
             adjusting = false;
@@ -73,7 +84,7 @@ public class MM_Collectors {
     }
 
     public void autoRunCollectorWheels(){
-        if (wheelsCollect){
+        if (collect &&! MM_OpMode.scoringLocation.equals("Chamber")){
             if (!collectStarted) {
                 collectTimer.reset();
                 collectStarted = !collectStarted;
@@ -83,22 +94,32 @@ public class MM_Collectors {
                 collectorWheels.setPower(COLLECT_POWER);
             } else {
                 collectorWheels.setPower(0);
-                wheelsCollect = false;
+                collect = false;
                 collectStarted = false;
             }
-        } else if (wheelsScore) {
+        } else if (score) {
             if (!scoreStarted) {
                 scoreTimer.reset();
                 scoreStarted = !scoreStarted;
             }
 
-            if (haveSample() || scoreTimer.milliseconds() < 3000) {
-                collectorWheels.setPower(-COLLECT_POWER);
+            if (haveSample() || scoreTimer.milliseconds() < 1000) {
+                collectorWheels.setPower(COLLECT_POWER);
             } else {
                 collectorWheels.setPower(0);
-                wheelsScore = false;
+                score = false;
                 scoreStarted = false;
             }
+        }
+    }
+
+    public void autoRunSpecClaw(){
+        if (collectStarted && MM_OpMode.scoringLocation.equals("Chamber")){
+            specimenClaw.setPosition(.78);
+            collect = false;
+        } else if (scoreStarted && MM_OpMode.scoringLocation.equals("Chamber")){
+            specimenClaw.setPosition(.5);
+            score = false;
         }
     }
 

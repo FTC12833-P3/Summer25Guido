@@ -17,6 +17,8 @@ public class MM_TeleOp extends MM_OpMode{
             robot.transport.runSlide();
             robot.transport.runPivot();
             robot.collectors.runCollectorWheels();
+            robot.collectors.runSpecClaw();
+            robot.ascent.controlAscent();
 
 
             telemetry();

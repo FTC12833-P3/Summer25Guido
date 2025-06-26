@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 public class MM_Position {
-    private double x = 0;
-    private double y = 0;
-    private double heading = 0;
+    public static double x = 0;
+    public static  double y = 0;
+    public static double heading = 0;
 
     public MM_Position(double x, double y, double heading) {
         setAll(x, y, heading);
@@ -33,9 +33,9 @@ public class MM_Position {
         heading = newHeading;
     }
 
-    public void setAll(double x, double y, double heading){
-        this.x = x;
-        this.y = y;
-        this.heading = heading;
+    public void setAll(double newX, double newY, double newHeading){
+        x = newX;
+        y = newY;
+        heading = newHeading;
     }
 }

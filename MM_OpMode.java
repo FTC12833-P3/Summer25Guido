@@ -42,8 +42,11 @@ public abstract class MM_OpMode extends LinearOpMode {
             MM_Navigation.targetPos.setAll(0,0,0);
             MM_Transport.slideTargetInches = 0;
             MM_Transport.targetPivotAngle = 0;
-            MM_Collectors.wheelsCollect = false;
-            MM_Collectors.wheelsScore = false;
+            MM_Collectors.collect = false;
+            MM_Collectors.score = false;
+            MM_Drivetrain.Y_ERROR_THRESHOLD = .5;
+            MM_Drivetrain.X_ERROR_THRESHOLD = .5;
+            MM_Drivetrain.desiredPower = 1;
         }
     }
 

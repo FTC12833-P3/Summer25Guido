@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.util.Range.clip;
+
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
@@ -36,6 +38,7 @@ public class MM_Transport {
     private boolean pivotBottomLimitIsHandled = false;
     private boolean slideHoldingMinimum = false;
     private boolean slideHoming = false;
+    private boolean pivotHoming = false;
     private int slideTargetTicks;
 
     public static double targetPivotAngle = -24;
@@ -52,7 +55,7 @@ public class MM_Transport {
         pivot.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setTargetPosition(0);
         if (opMode.getClass() == MM_Autos.class) {
-            pivot.setPower(.85);
+            pivot.setPower(.7);
             pivot.setTargetPosition(1789);
         }
         pivot.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
@@ -86,6 +89,11 @@ public class MM_Transport {
                 pivot.setPower(1);
             }
             pivotTargetTicks = (int)clip(pivot.getCurrentPosition() + -opMode.gamepad2.left_stick_y * PIVOT_TICK_INCREMENT, 0, MAX_PIVOT_TICKS);
+            pivotHoming = false;
+        } else if (opMode.gamepad2.x) {
+            pivotHoming = true;
+            pivot.setPower(-0.7);
+            pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
         pivot.setTargetPosition(pivotTargetTicks);
     }
@@ -127,9 +135,14 @@ public class MM_Transport {
             slide.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             slide.setPower(-.7);
             slideHoming = true;
-        } else if (opMode.gamepad2.y){
+        } else if (opMode.gamepad2.y && !opMode.gamepad2.b){
             slideTargetTicks = MAX_SLIDE_TICKS;
         }
+
+        if (opMode.gamepad2.y && opMode.gamepad2.b ){
+            slideTargetTicks = 1828;
+        }
+
         slide.setTargetPosition(clip(slideTargetTicks, 0, getSlideLimit()));
     }
 
@@ -137,8 +150,12 @@ public class MM_Transport {
         slide.setTargetPosition(Math.min(getSlideLimit(), slideInchesToTicks(slideTargetInches)));
     }
 
+    public void setPivotAngle(double angle){
+        pivot.setTargetPosition(pivotDegreesToTicks(angle));
+    }
+
     public boolean slideDone(){
-        return (slide.getCurrentPosition() - slideInchesToTicks(slideTargetInches)) < SLIDE_TICK_THRESHOLD;
+        return Math.abs(slide.getCurrentPosition() - slideInchesToTicks(slideTargetInches)) < SLIDE_TICK_THRESHOLD;
     }
 
     public int getSlideTicks() {
@@ -155,6 +172,10 @@ public class MM_Transport {
 
     private int slideInchesToTicks(double inches){
         return (int) (inches * SLIDE_TICKS_PER_INCH);
+    }
+
+    public double slideTicksToInches(int ticks){
+        return (ticks / SLIDE_TICKS_PER_INCH);
     }
 
     public double getPivotCurrentTicks(){
