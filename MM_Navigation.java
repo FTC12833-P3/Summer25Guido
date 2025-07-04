@@ -17,6 +17,7 @@ public class MM_Navigation {
     Pose2D AprilTagPos;
     double pastExtrinsicY;
     public static MM_Position targetPos = new MM_Position(0, 0, 0);
+    public MM_Spline testSpline = new MM_Spline(new double[]{36, 40.32, 43.68, 46, 47.52, 48, 47.52, 46.08, 43.68, 40.32, 36}, new double[]{-24, -19.2, -14.4, -9.6, -4.8, 0, 4.8, 9.6, 14.4, 19.2, 24});
 
     MM_Navigation(MM_OpMode opMode){
         this.opMode = opMode;

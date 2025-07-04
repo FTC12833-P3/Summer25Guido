@@ -33,7 +33,7 @@ public abstract class MM_OpMode extends LinearOpMode {
             previousGamepad2.copy(currentGamepad2);
             currentGamepad2.copy(gamepad2);
 
-            if (getClass() == MM_Autos.class){
+            if (getClass() == MM_Autos.class ||getClass() == MM_Pathing.class){
                 robot.drivetrain.navigation.updatePosition(true);
             }
         }
