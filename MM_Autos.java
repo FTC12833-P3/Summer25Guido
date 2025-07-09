@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 public class MM_Autos extends MM_OpMode{
     private int cycles = 0;
     private boolean scoreIsHandled = false;
+    public static final int SPLINE_DETAIL_LEVEL = 20;
 
     private enum STATES {
         DRIVE_TO_COLLECT_SAMPLE,
@@ -33,7 +34,7 @@ public class MM_Autos extends MM_OpMode{
             switch (state) {
                 case DRIVE_TO_BASKET:
                     //drive (x, y, heading)
-                    MM_Navigation.targetPos.setAll(53.8, 52.5, 225);
+                    MM_Position_Data.targetPos.setAll(53.8, 52.5, 225);
                     MM_Transport.targetPivotAngle = 93;
                     MM_Transport.slideTargetInches = 26;
                     previousState = state;
@@ -44,7 +45,7 @@ public class MM_Autos extends MM_OpMode{
 
 
                 case DRIVE_TO_CHAMBER:
-                    MM_Navigation.targetPos.setAll(0, 41.1, 90);
+                    MM_Position_Data.targetPos.setAll(0, 41.1, 90);
                     MM_Transport.slideTargetInches = 16.1;
                     MM_Transport.targetPivotAngle = 92;
                     if(robot.drivetrain.driveDone() && robot.transport.pivotDone() && robot.transport.slideDone()){
@@ -74,7 +75,7 @@ public class MM_Autos extends MM_OpMode{
                     break;
                 case SCORE_SPECIMEN:
                     if(state != previousState) {
-                        MM_Navigation.targetPos.setHeading(90);
+                        MM_Position_Data.targetPos.setHeading(90);
                         MM_Drivetrain.targetDistance = 5.9;
                         MM_Drivetrain.useDistance = true;
                     }
@@ -104,11 +105,11 @@ public class MM_Autos extends MM_OpMode{
                 case DRIVE_TO_COLLECT_SAMPLE:
                     //drive (x, y, heading)
                     if(cycles < 3) {
-                        MM_Navigation.targetPos.setAll(46.6 + (10 * (cycles - 1)), 38.5, 270);
+                        MM_Position_Data.targetPos.setAll(46.6 + (10 * (cycles - 1)), 38.5, 270);
                         MM_Transport.slideTargetInches = 5.5;
                         MM_Transport.targetPivotAngle = 0;
                     } else if (cycles < 4){
-                        MM_Navigation.targetPos.setAll(58.75, 46.8, 285.86);
+                        MM_Position_Data.targetPos.setAll(58.75, 46.8, 285.86);
                         MM_Transport.targetPivotAngle = 0;
                         MM_Transport.slideTargetInches = 15.5;
                     }
@@ -146,7 +147,7 @@ public class MM_Autos extends MM_OpMode{
                     break;
                 case DRIVE_TO_PARK:
                     if(!scoringLocation.equals("Chamber")){
-                        MM_Navigation.targetPos.setAll(34, 10, 180);
+                        MM_Position_Data.targetPos.setAll(34, 10, 180);
                         MM_Transport.targetPivotAngle = -23.5;
                         MM_Transport.slideTargetInches = .5;
                         MM_Drivetrain.Y_ERROR_THRESHOLD = 6;
@@ -160,7 +161,7 @@ public class MM_Autos extends MM_OpMode{
 
                 case ASCEND:
                     //ascend with zip tie
-                    MM_Navigation.targetPos.setX(28);
+                    MM_Position_Data.targetPos.setX(28);
                     if(robot.drivetrain.driveDone() && previousState == state){
                         robot.ascent.park();
                     }

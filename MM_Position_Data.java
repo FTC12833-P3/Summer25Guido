@@ -6,20 +6,21 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 @Config
-public class MM_Navigation {
+public class MM_Position_Data {
     public static final double TAG_FLIP_THRESHOLD = .2;
     private final MM_OpMode opMode;
 
     public MM_VisionPortal visionPortal;
     public GoBildaPinpointDriver odometryController;
 
-    Pose2D currentPos;
-    Pose2D AprilTagPos;
-    double pastExtrinsicY;
-    public static MM_Position targetPos = new MM_Position(0, 0, 0);
-    public MM_Spline testSpline = new MM_Spline(new double[]{36, 40.32, 43.68, 46, 47.52, 48, 47.52, 46.08, 43.68, 40.32, 36}, new double[]{-24, -19.2, -14.4, -9.6, -4.8, 0, 4.8, 9.6, 14.4, 19.2, 24});
+    private Pose2D currentPos;
+    private Pose2D AprilTagPos;
+    public double pastExtrinsicY;
 
-    MM_Navigation(MM_OpMode opMode){
+    public static MM_Position targetPos = new MM_Position(0, 0, 0);
+    public MM_Spline testSpline = new MM_Spline(new double[]{36, 60, 36}, new double[]{24, 0, -24}, MM_Autos.SPLINE_DETAIL_LEVEL);
+
+    MM_Position_Data(MM_OpMode opMode){
         this.opMode = opMode;
         visionPortal = new MM_VisionPortal(opMode);
         odometryController = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "odo");

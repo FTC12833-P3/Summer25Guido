@@ -4,8 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name="pathing", group="MM")
 public class MM_Pathing extends MM_OpMode{
-    private int cycles = 0;
-    private boolean scoreIsHandled = false;
 
     private enum STATES {
         DRIVE_TO_COLLECT_SAMPLE,
@@ -25,7 +23,7 @@ public class MM_Pathing extends MM_OpMode{
     STATES state = STATES.DRIVE_TO_BASKET;
     STATES previousState = null;
 
-    int curveSection = 0;
+    int currentSection = 0;
     double targetX;
     double targetY;
 
@@ -34,27 +32,44 @@ public class MM_Pathing extends MM_OpMode{
         if (scoringLocation.equals("Chamber")){
             state = STATES.DRIVE_TO_CHAMBER;
         }
-        targetX = robot.drivetrain.navigation.testSpline.getNextPoint(-1)[0];
-        targetY = robot.drivetrain.navigation.testSpline.getNextPoint(-1)[1];
-        MM_Navigation.targetPos.setAll(targetX, targetY, -90);
-        MM_Drivetrain.X_ERROR_THRESHOLD = 4;
-        MM_Drivetrain.Y_ERROR_THRESHOLD = 4;
-        MM_PID_CONTROLLER.D_COEFF = 0;
+
+        prepareToSpline(robot.drivetrain.navigation.testSpline);
         while(opModeIsActive()){
 
             if(robot.drivetrain.driveDone()){
-                targetX = robot.drivetrain.navigation.testSpline.getNextPoint(curveSection)[0];
-                targetY = robot.drivetrain.navigation.testSpline.getNextPoint(curveSection)[1];
-                MM_Navigation.targetPos.setAll(targetX, targetY, -90);
-                curveSection++;
-                if(curveSection == 11){
-                    MM_Drivetrain.X_ERROR_THRESHOLD = .5;
-                    MM_Drivetrain.Y_ERROR_THRESHOLD = .5;
-                    MM_PID_CONTROLLER.D_COEFF = 30;
-                }
+                setNextSplinePoint(robot.drivetrain.navigation.testSpline);
+            }
+
+            if(splineDone()){
+                //state = ...
             }
 
             robot.drivetrain.autoRunDrivetrain();
         }
+    }
+
+
+    public void setNextSplinePoint(MM_Spline spline){
+        targetX = spline.getNextPoint(currentSection)[0];
+        targetY = spline.getNextPoint(currentSection)[1];
+        MM_Position_Data.targetPos.setAll(targetX, targetY, -90);
+        currentSection++;
+    }
+
+    public void prepareToSpline(MM_Spline spline){
+        setNextSplinePoint(spline);
+        MM_Drivetrain.X_ERROR_THRESHOLD = 4;
+        MM_Drivetrain.Y_ERROR_THRESHOLD = 4;
+        MM_PID_CONTROLLER.D_COEFF = 0;
+        currentSection -= 1;
+    }
+    public boolean splineDone(){
+        if(currentSection == MM_Autos.SPLINE_DETAIL_LEVEL + 1){
+            MM_Drivetrain.X_ERROR_THRESHOLD = .5;
+            MM_Drivetrain.Y_ERROR_THRESHOLD = .5;
+            MM_PID_CONTROLLER.D_COEFF = 30;
+            return true;
+        }
+        return false;
     }
 }

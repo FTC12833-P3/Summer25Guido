@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class MM_Drivetrain {
     public static final double DISTANCE_P_COEFF = 0.04;
     MM_OpMode opMode;
-    MM_Navigation navigation;
+    MM_Position_Data navigation;
     public static MM_PID_CONTROLLER pidController = new MM_PID_CONTROLLER(0.2, 0, 30);
 
     private final DcMotorEx flMotor;
@@ -46,7 +46,7 @@ public class MM_Drivetrain {
 
     public MM_Drivetrain(MM_OpMode opMode){
         this.opMode = opMode;
-        navigation = new MM_Navigation(opMode);
+        navigation = new MM_Position_Data(opMode);
 
         flMotor = opMode.hardwareMap.get(DcMotorEx.class, "flMotor");
         frMotor = opMode.hardwareMap.get(DcMotorEx.class, "frMotor");
@@ -116,13 +116,14 @@ public class MM_Drivetrain {
 
     public void autoRunDrivetrain() {
         navigation.updatePosition();
-        xError = MM_Navigation.targetPos.getX() - navigation.getX();
-        yError = MM_Navigation.targetPos.getY() - navigation.getY();
+        xError = MM_Position_Data.targetPos.getX() - navigation.getX();
+        yError = MM_Position_Data.targetPos.getY() - navigation.getY();
         headingError = getNormalizedHeadingError();
 
         double rotateVector = headingError * ROTATE_P_CO_EFF;
         double moveAngle = Math.toDegrees(Math.atan2(yError, xError));
         double theta = moveAngle - navigation.getHeading() + 45;
+
         if(!useDistance) {
             double PID = pidController.getPID(Math.hypot(xError, yError));
 
@@ -168,7 +169,7 @@ public class MM_Drivetrain {
     }
 
     private double getNormalizedHeadingError() {
-        double error =  MM_Navigation.targetPos.getHeading() - navigation.getHeading();
+        double error =  MM_Position_Data.targetPos.getHeading() - navigation.getHeading();
 
         error = (error >= 180) ? error - 360 : ((error <= -180) ? error + 360 : error); // a nested ternary to determine error
         return error;
