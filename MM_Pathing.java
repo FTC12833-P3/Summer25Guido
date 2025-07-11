@@ -33,11 +33,14 @@ public class MM_Pathing extends MM_OpMode{
             state = STATES.DRIVE_TO_CHAMBER;
         }
 
-        prepareToSpline(robot.drivetrain.navigation.testSpline);
+        prepareToSpline(robot.drivetrain.navigation.testCubicSpline);
         while(opModeIsActive()){
 
             if(robot.drivetrain.driveDone()){
-                setNextSplinePoint(robot.drivetrain.navigation.testSpline);
+                setNextSplinePoint(robot.drivetrain.navigation.testCubicSpline);
+                multipleTelemetry.addData("xPoint", targetX);
+                multipleTelemetry.addData("yPoint", targetY);
+                multipleTelemetry.update();
             }
 
             if(splineDone()){

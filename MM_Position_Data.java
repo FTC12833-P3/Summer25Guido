@@ -19,6 +19,7 @@ public class MM_Position_Data {
 
     public static MM_Position targetPos = new MM_Position(0, 0, 0);
     public MM_Spline testSpline = new MM_Spline(new double[]{36, 60, 36}, new double[]{24, 0, -24}, MM_Autos.SPLINE_DETAIL_LEVEL);
+    public MM_Spline testCubicSpline = new MM_Spline(new double[]{36, 96, 0, 48}, new double[]{46, 0, 0, -48}, MM_Autos.SPLINE_DETAIL_LEVEL, true);
 
     MM_Position_Data(MM_OpMode opMode){
         this.opMode = opMode;
