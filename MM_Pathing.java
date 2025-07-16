@@ -47,12 +47,15 @@ public class MM_Pathing extends MM_OpMode{
                 //state = ...
             }
 
+            currentSpline = null;
+
             robot.drivetrain.autoRunDrivetrain();
         }
     }
 
 
     public void setNextSplinePoint(MM_Spline spline){
+        spline.updateDistanceTraveled(currentSection);
         targetX = spline.getNextPoint(currentSection)[0];
         targetY = spline.getNextPoint(currentSection)[1];
         MM_Position_Data.targetPos.setAll(targetX, targetY, -90);
@@ -60,6 +63,8 @@ public class MM_Pathing extends MM_OpMode{
     }
 
     public void prepareToSpline(MM_Spline spline){
+        spline.resetDistanceTraveled();
+        currentSpline = spline;
         setNextSplinePoint(spline);
         MM_Drivetrain.X_ERROR_THRESHOLD = 4;
         MM_Drivetrain.Y_ERROR_THRESHOLD = 4;
@@ -71,6 +76,8 @@ public class MM_Pathing extends MM_OpMode{
             MM_Drivetrain.X_ERROR_THRESHOLD = .5;
             MM_Drivetrain.Y_ERROR_THRESHOLD = .5;
             MM_PID_CONTROLLER.D_COEFF = 30;
+            currentSection = 0;
+            currentSpline = null;
             return true;
         }
         return false;

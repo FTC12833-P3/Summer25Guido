@@ -18,6 +18,7 @@ public abstract class MM_OpMode extends LinearOpMode {
 
     public static String scoringLocation = "Basket";
     public static int alliance = -1;
+    public MM_Spline currentSpline = null;
 
     public void runOpMode(){
         multipleTelemetry.addData("Status", "Initializing... please wait");

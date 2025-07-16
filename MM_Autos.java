@@ -38,6 +38,7 @@ public class MM_Autos extends MM_OpMode{
                     MM_Transport.targetPivotAngle = 93;
                     MM_Transport.slideTargetInches = 26;
                     previousState = state;
+
                     if (robot.drivetrain.driveDone() && robot.transport.slideDone() && robot.transport.pivotDone()) {
                         state = STATES.SCORE_SAMPLE;
                     }
@@ -48,6 +49,7 @@ public class MM_Autos extends MM_OpMode{
                     MM_Position_Data.targetPos.setAll(0, 41.1, 90);
                     MM_Transport.slideTargetInches = 16.1;
                     MM_Transport.targetPivotAngle = 92;
+
                     if(robot.drivetrain.driveDone() && robot.transport.pivotDone() && robot.transport.slideDone()){
                         state = STATES.SCORE_SPECIMEN;
                     }
