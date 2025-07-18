@@ -33,11 +33,11 @@ public class MM_Pathing extends MM_OpMode{
             state = STATES.DRIVE_TO_CHAMBER;
         }
 
-        prepareToSpline(robot.drivetrain.navigation.continuousCubicSpline);
+        prepareToSpline(robot.drivetrain.navigation.testCubicSpline);
         while(opModeIsActive()){
 
             if(robot.drivetrain.driveDone()){
-                setNextSplinePoint(robot.drivetrain.navigation.continuousCubicSpline);
+                setNextSplinePoint(robot.drivetrain.navigation.testCubicSpline);
                 multipleTelemetry.addData("xPoint", targetX);
                 multipleTelemetry.addData("yPoint", targetY);
                 multipleTelemetry.update();
@@ -45,6 +45,7 @@ public class MM_Pathing extends MM_OpMode{
 
             if(splineDone()){
                 //state = ...
+
             }
 
             robot.drivetrain.autoRunDrivetrain();
@@ -64,13 +65,13 @@ public class MM_Pathing extends MM_OpMode{
         spline.resetDistanceTraveled();
         currentSpline = spline;
         setNextSplinePoint(spline);
-        MM_Drivetrain.X_ERROR_THRESHOLD = 2.5;
-        MM_Drivetrain.Y_ERROR_THRESHOLD = 2.5;
+        MM_Drivetrain.X_ERROR_THRESHOLD = 4;
+        MM_Drivetrain.Y_ERROR_THRESHOLD = 4;
         MM_PID_CONTROLLER.D_COEFF = 0;
         currentSection -= 1;
     }
     public boolean splineDone(){
-        if(currentSpline.splineDone(currentSection)){
+        if(currentSection == MM_Autos.SPLINE_DETAIL_LEVEL + 1){
             MM_Drivetrain.X_ERROR_THRESHOLD = .5;
             MM_Drivetrain.Y_ERROR_THRESHOLD = .5;
             MM_PID_CONTROLLER.D_COEFF = 30;

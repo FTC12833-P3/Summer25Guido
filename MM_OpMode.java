@@ -62,5 +62,15 @@ public abstract class MM_OpMode extends LinearOpMode {
     public void initialize(){
         robot = new MM_Robot(this);
         robot.init();
+        double[] xPoints = robot.drivetrain.navigation.continuousCubicSpline.getxPoints();
+        double[] yPoints = robot.drivetrain.navigation.continuousCubicSpline.getyPoints();
+
+        multipleTelemetry.addData("first x point", xPoints[0]);
+        multipleTelemetry.addData("second x point", xPoints[1]);
+        multipleTelemetry.addData("third x point", xPoints[2]);
+        multipleTelemetry.addData("first y point", yPoints[0]);
+        multipleTelemetry.addData("second y point", yPoints[1]);
+        multipleTelemetry.addData("third y point", yPoints[2]);
+        multipleTelemetry.update();
     }
 }
