@@ -125,7 +125,7 @@ public class MM_Drivetrain {
         double theta = moveAngle - navigation.getHeading() + 45;
 
         if(!useDistance) {
-            double PID = pidController.getPID(opMode.currentSpline == null? Math.hypot(xError, yError): opMode.currentSpline.getError());
+            double PID = pidController.getPID(Math.hypot(xError, yError));
 
             flPower = (2 * Math.cos(Math.toRadians(theta)) * PID) - rotateVector;
             frPower = (2 * Math.sin(Math.toRadians(theta)) * PID) + rotateVector;
